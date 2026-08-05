@@ -14,29 +14,32 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="w-full h-screen bg-gradient-to-t from-black to-[#02023d] flex justify-center items-center">
-        <p className="text-white text-lg font-semibold">
-          Loading...
-        </p>
+      <div className="w-full h-screen flex items-center justify-center bg-black text-white">
+        Loading...
       </div>
     );
   }
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-
       <Route
-        path="/signup"
+        path="/"
         element={
-          !userData ? <SignUp /> : <Navigate to="/" replace />
+          userData ? <Home /> : <Navigate to="/signin" replace />
         }
       />
 
       <Route
         path="/signin"
         element={
-          !userData ? <SignIn /> : <Navigate to="/" replace />
+          userData ? <Navigate to="/" replace /> : <SignIn />
+        }
+      />
+
+      <Route
+        path="/signup"
+        element={
+          userData ? <Navigate to="/" replace /> : <SignUp />
         }
       />
 
@@ -46,7 +49,7 @@ function App() {
           userData ? (
             <Customize />
           ) : (
-            <Navigate to="/signup" replace />
+            <Navigate to="/signin" replace />
           )
         }
       />
@@ -57,12 +60,15 @@ function App() {
           userData ? (
             <Customize2 />
           ) : (
-            <Navigate to="/signup" replace />
+            <Navigate to="/signin" replace />
           )
         }
       />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
     </Routes>
   );
 }
