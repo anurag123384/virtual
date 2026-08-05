@@ -35,15 +35,24 @@ function SignIn() {
         }
       );
 
-      setUserData(data);
+      if (!data.success) {
+        toast.error(data.message || "Login Failed");
+        setLoading(false);
+        return;
+      }
+
+      // Save only user object
+      setUserData(data.user);
 
       toast.success("Login Successful 🎉");
 
       navigate("/");
     } catch (error) {
+      console.log(error);
+
       toast.error(
         error?.response?.data?.message ||
-          "Login failed"
+          "Something went wrong"
       );
     } finally {
       setLoading(false);
@@ -100,7 +109,6 @@ function SignIn() {
             Sign Up
           </Link>
         </p>
-
       </motion.form>
 
     </div>

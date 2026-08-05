@@ -42,12 +42,15 @@ export const signUp = async (req, res) => {
       password: hashedPassword,
     });
 
-    const token = await genToken(user._id);
+    const token = genToken(user._id);
 
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite:
+        process.env.NODE_ENV === "production"
+          ? "none"
+          : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -59,18 +62,13 @@ export const signUp = async (req, res) => {
       user: safeUser,
     });
   } catch (error) {
-    console.error("Signup Error:", error);
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Email already exists",
-      });
-    }
+    console.error("========== SIGNUP ERROR ==========");
+    console.error(error);
+    console.error(error.stack);
 
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: error.message,
     });
   }
 };
@@ -100,7 +98,10 @@ export const Login = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
 
     if (!isMatch) {
       return res.status(400).json({
@@ -109,12 +110,15 @@ export const Login = async (req, res) => {
       });
     }
 
-    const token = await genToken(user._id);
+    const token = genToken(user._id);
 
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite:
+        process.env.NODE_ENV === "production"
+          ? "none"
+          : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -125,12 +129,15 @@ export const Login = async (req, res) => {
       message: "Login Successful",
       user: safeUser,
     });
+
   } catch (error) {
-    console.error("Login Error:", error);
+    console.error("========== LOGIN ERROR ==========");
+    console.error(error);
+    console.error(error.stack);
 
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: error.message,
     });
   }
 };
@@ -142,20 +149,26 @@ export const Logout = async (req, res) => {
   try {
     res.clearCookie("token", {
       httpOnly: true,
-      sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
+      sameSite:
+        process.env.NODE_ENV === "production"
+          ? "none"
+          : "lax",
     });
 
     return res.status(200).json({
       success: true,
       message: "Logout Successful",
     });
+
   } catch (error) {
-    console.error("Logout Error:", error);
+    console.error("========== LOGOUT ERROR ==========");
+    console.error(error);
+    console.error(error.stack);
 
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: error.message,
     });
   }
 };

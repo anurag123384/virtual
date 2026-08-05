@@ -3,7 +3,9 @@ import axios from "axios";
 import { userDataContext } from "./userDataContext";
 
 function UserContext({ children }) {
-  const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+  const serverUrl = import.meta.env.VITE_SERVER_URL;
+
+  console.log("SERVER URL:", serverUrl);
 
   const [userData, setUserData] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -17,7 +19,6 @@ function UserContext({ children }) {
   // =============================
   // Current User
   // =============================
-
   const handleCurrentUser = async () => {
     try {
       const { data } = await axios.get(
@@ -41,9 +42,8 @@ function UserContext({ children }) {
   };
 
   // =============================
-  // Gemini
+  // Assistant Response
   // =============================
-
   const getGeminiResponse = async (command) => {
     try {
       const { data } = await axios.post(
@@ -56,6 +56,8 @@ function UserContext({ children }) {
 
       return data;
     } catch (error) {
+      console.log(error);
+
       return {
         type: "general",
         userInput: command,
@@ -70,14 +72,18 @@ function UserContext({ children }) {
   // =============================
   // Refresh User
   // =============================
-
   const refreshUser = async () => {
     await handleCurrentUser();
   };
 
   useEffect(() => {
-    handleCurrentUser();
-  }, []);
+    if (serverUrl) {
+      handleCurrentUser();
+    } else {
+      console.error("VITE_SERVER_URL is missing!");
+      setAuthLoading(false);
+    }
+  }, [serverUrl]);
 
   return (
     <userDataContext.Provider
