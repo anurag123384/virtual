@@ -10,36 +10,60 @@ import userRouter from "./routes/user.routes.js";
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 8000;
+const PORT = process.env.PORT || 8000;
 
-// Connect Database First
+// ==========================
+// Database
+// ==========================
 await connectDb();
 
-// Middlewares
+// ==========================
+// CORS
+// ==========================
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL,
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
 
+// ==========================
+// Middlewares
+// ==========================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// ==========================
 // Health Check
+// ==========================
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Backend Server Running Successfully 🚀",
+    message: "Backend Server Running 🚀",
   });
 });
 
+// ==========================
 // Routes
+// ==========================
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 
-// 404 Handler
+// ==========================
+// 404
+// ==========================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -47,7 +71,9 @@ app.use((req, res) => {
   });
 });
 
+// ==========================
 // Start Server
-app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
+// ==========================
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
