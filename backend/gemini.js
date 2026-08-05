@@ -1,23 +1,13 @@
-import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
 
-const getGeminiConfig = () => {
-  const apiUrl = process.env.GEMINI_API_URL?.trim();
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+import Groq from "groq-sdk";
 
-  if (!apiUrl) {
-    throw new Error("GEMINI_API_URL is missing");
-  }
-
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is missing");
-  }
-
-  return { apiUrl, apiKey };
-};
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
 
 const geminiResponse = async (command, assistantName, userName) => {
-  const { apiUrl, apiKey } = getGeminiConfig();
-
   const prompt = `
 You are an intelligent virtual assistant named "${assistantName || "Assistant"}".
 
@@ -34,7 +24,6 @@ Response format:
 }
 
 Rules:
-
 1. Return ONLY JSON.
 2. Never return markdown.
 3. Never use \`\`\`.
@@ -46,45 +35,21 @@ ${command}
 `;
 
   try {
-    const { data } = await axios.post(
-      `${apiUrl}?key=${encodeURIComponent(apiKey)}`,
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
+    const completion = await groq.chat.completions.create({
+     model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
         },
-        timeout: 20000,
-      }
-    );
+      ],
+      temperature: 0.3,
+    });
 
-    const response =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!response) {
-      throw new Error("Empty Gemini response");
-    }
-
-    return response.trim();
+    return completion.choices[0].message.content.trim();
   } catch (error) {
-    console.error(
-      "Gemini Error:",
-      error?.response?.data || error.message
-    );
-
-    throw new Error(
-      error?.response?.data?.error?.message ||
-        "Gemini request failed"
-    );
+    console.error("Groq Error:", error);
+    throw new Error(error?.message || "Groq request failed");
   }
 };
 
